@@ -167,7 +167,7 @@ namespace MarkupConverter
                     case "FontStretch":
                         break;
                     case "FontSize":
-                        css = "font-size:" + xamlReader.Value + ";";
+                        css = "font-size:" + xamlReader.Value + "px;";
                         break;
                     case "Foreground":
                         css = "color:" + ParseXamlColor(xamlReader.Value) + ";";
@@ -210,7 +210,7 @@ namespace MarkupConverter
                     case "LineHeight":
                         break;
                     case "TextIndent":
-                        css = "text-indent:" + xamlReader.Value + ";";
+                        css = "text-indent:" + xamlReader.Value + "px;";
                         break;
                     case "TextAlignment":
                         css = "text-align:" + xamlReader.Value + ";";
@@ -229,7 +229,7 @@ namespace MarkupConverter
                     // Table attributes
                     // ----------------
                     case "Width":
-                        css = "width:" + xamlReader.Value + ";";
+                        css = "width:" + xamlReader.Value + "px;";
                         break;
                     case "ColumnSpan":
                         htmlWriter.WriteAttributeString("COLSPAN", xamlReader.Value);
@@ -295,16 +295,16 @@ namespace MarkupConverter
             switch (values.Length)
             {
                 case 1:
-                    cssThickness = thickness;
+                    cssThickness = $"{thickness}px";
                     break;
                 case 2:
-                    cssThickness = values[1] + " " + values[0];
+                    cssThickness = $"{values[1]}px {values[0]}px";
                     break;
                 case 4:
-                    cssThickness = values[1] + " " + values[2] + " " + values[3] + " " + values[0];
+                    cssThickness = $"{values[1]}px {values[2]}px {values[3]}px {values[0]}px";
                     break;
                 default:
-                    cssThickness = values[0];
+                    cssThickness = $"{values[0]}px";
                     break;
             }
 
