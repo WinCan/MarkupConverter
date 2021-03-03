@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -14,15 +15,16 @@ namespace MarkupConverter
         {
             var xamlText = HtmlToXamlConverter.ConvertHtmlToXaml(htmlText, false);
 
-            return ConvertXamlToRtf(xamlText);
+            var rtxText = ConvertXamlToRtf(xamlText);
+            return CleanRtfList(rtxText);
         }
 
         private static string ConvertXamlToRtf(string xamlText)
         {
-            var richTextBox = new RichTextBox();
             if (string.IsNullOrEmpty(xamlText)) return "";
+            var flowDocument = new FlowDocument();
 
-            var textRange = new TextRange(richTextBox.Document.ContentStart, richTextBox.Document.ContentEnd);
+            var textRange = new TextRange(flowDocument.ContentStart, flowDocument.ContentEnd);
 
             //Create a MemoryStream of the xaml content
 
@@ -34,15 +36,14 @@ namespace MarkupConverter
                     xamlStreamWriter.Flush();
                     xamlMemoryStream.Seek(0, SeekOrigin.Begin);
 
-                    //Load the MemoryStream into TextRange ranging from start to end of RichTextBox.
+                    //Load the MemoryStream into TextRange ranging from start to end of FlowDocument.
                     textRange.Load(xamlMemoryStream, DataFormats.Xaml);
                 }
             }
 
             using (var rtfMemoryStream = new MemoryStream())
             {
-
-                textRange = new TextRange(richTextBox.Document.ContentStart, richTextBox.Document.ContentEnd);
+                textRange = new TextRange(flowDocument.ContentStart, flowDocument.ContentEnd);
                 textRange.Save(rtfMemoryStream, DataFormats.Rtf);
                 rtfMemoryStream.Seek(0, SeekOrigin.Begin);
                 using (var rtfStreamReader = new StreamReader(rtfMemoryStream))
