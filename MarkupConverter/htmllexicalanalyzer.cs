@@ -124,6 +124,7 @@ namespace MarkupConverter
             {
                 // read text content, unless you encounter a tag
                 _nextTokenType = HtmlTokenType.Text;
+                _ignoreNextWhitespace = false;
                 while (!this.IsAtTagStart && !this.IsAtEndOfStream && !this.IsAtDirectiveStart)
                 {
                     if (this.NextCharacter == '<' && !this.IsNextCharacterEntity && _lookAheadCharacter == '?')
