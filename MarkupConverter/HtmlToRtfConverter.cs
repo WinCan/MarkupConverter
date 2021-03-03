@@ -1,9 +1,6 @@
-﻿using System;
-using System.IO;
-using System.Text;
 ﻿using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Documents;
 
 namespace MarkupConverter
@@ -51,11 +48,21 @@ namespace MarkupConverter
                     return rtfStreamReader.ReadToEnd();
                 }
             }
-
         }
 
+        private static string CleanRtfList(string rtf)
+        {
+            Regex rx = new Regex(@"(?:({\\\*\\listtable(?:.*?\r?\n?)*)\\loch)");
 
+            foreach (Match match in rx.Matches(rtf))
+            {
+                if (match.Groups.Count > 1)
+                {
+                    rtf = rtf.Replace(match.Groups[1].Value, "");
+                }
+            }
 
-
+            return rtf;
+        }
     }
 }
