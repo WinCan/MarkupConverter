@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>MarkupConverter</id>
+    <version>1.0.0</version>
+    <title>MarkupConverter</title>
+    <authors>https://github.com/mmanela</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+This package provides a library to convert from RTF to HTML and vice versa
+	</description>
+  </metadata>
+  <files>
+    <file src="MarkupConverter\bin\Release\MarkupConverter.dll" target="lib/net462" />
+  </files>
+</package>
