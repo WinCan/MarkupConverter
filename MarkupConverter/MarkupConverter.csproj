@@ -71,6 +71,7 @@
     <Compile Include="HtmlToXamlConverter.cs" />
     <Compile Include="MarkupConverter.cs" />
     <Compile Include="RtfToHtmlConverter.cs" />
+    <Compile Include="TestCodeScanning.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
