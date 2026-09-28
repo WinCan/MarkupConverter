@@ -1,0 +1,94 @@
+pipeline {
+    parameters {
+        choice(name: 'Agent', choices: ['VX-Fleet-Temp', 'AWWCPSVXBUILD'], description: 'Jenkins agent')
+        string(name: 'BranchName', defaultValue: 'master', description: 'Git branch')
+        string(name: 'RepoURL', defaultValue: 'git@github.com:WinCan/MarkupConverter.git', description: 'Git repository')
+        string(name: 'PRERELEASE', defaultValue: '', description: 'Optional package prerelease suffix')
+    }
+    agent {
+        node {
+            label "${params.Agent}"
+        }
+    }
+    environment {
+        NUGET_FEED = 'https://nuget.pkg.github.com/wincan/index.json'
+        NUGET_FEED_ENTERPRISE = 'https://nuget.pkg.github.com/wincan-ag/index.json'
+    }
+
+    stages {
+        stage('Prepare environment') {
+          steps {
+            cleanWs()
+            bat"git config --system core.longpaths true"
+            checkout scmGit(branches: [[name: "${params.BranchName}"]], extensions: [localBranch('**'), cloneOption(timeout: 120)], userRemoteConfigs: [[credentialsId: 'GitHubVX', url: "${params.RepoURL}"]])
+          }
+        }
+
+        stage('Prepare Version') {
+            steps {
+                script {
+                    def date = new Date().format('yyyy.M.d')
+
+                    def buildNumber = env.BUILD_NUMBER
+
+                    env.VERSION = params.PRERELEASE ? "${date}.${buildNumber}-${params.PRERELEASE}" : "${date}.${buildNumber}"
+
+                    echo "Generated version: ${env.VERSION}"
+                }
+            }
+        }
+
+        stage('Set Build Display Name') {
+          steps {
+            script {
+                def prereleaseSuffix = params.PRERELEASE ? "-${params.PRERELEASE}" : ""
+                currentBuild.displayName = "${params.BranchName}-${currentBuild.number}${prereleaseSuffix}"
+                echo "Build display name set to: ${currentBuild.displayName}"
+            }
+          }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                   bat """msbuild MarkupConverter/MarkupConverter.csproj /t:Rebuild /p:Configuration=Release /p:PrecompileBeforePublish=true /p:Platform=AnyCPU /p:EnableUpdateable=true"""
+                   }
+            }
+        }
+
+        stage('Pack') {
+            steps {
+                script {
+                    echo "Packing version: ${env.VERSION}"
+                    bat """nuget pack MarkupConverter.nuspec \
+                    -BasePath "$workspace" \
+                    -OutputDirectory ./artifacts \
+                    -Version ${env.VERSION} \
+                    -Properties ConfigurationRelease \
+                    -IncludeReferencedProjects"""
+                }
+            }
+        }
+        stage('Publish to GitHub Packages') {
+            steps {
+                withCredentials([string(credentialsId: 'github-packages-token', variable: 'GITHUB_TOKEN')]) {
+                    bat """
+                        set "GITHUB_TOKEN=%GITHUB_TOKEN%"
+                        dotnet nuget push "artifacts\\*.nupkg" --source %NUGET_FEED% --api-key %GITHUB_TOKEN% --skip-duplicate
+                    """
+                }
+                                                         withCredentials([string(credentialsId: 'github-packages-token-enterprise', variable: 'GITHUB_TOKEN_ENTERPRISE')]) {
+                    bat """
+                        set "GITHUB_TOKEN_ENTERPRISE=%GITHUB_TOKEN_ENTERPRISE%"
+                        dotnet nuget push "artifacts\\*.nupkg" --source %NUGET_FEED_ENTERPRISE% --api-key %GITHUB_TOKEN_ENTERPRISE% --skip-duplicate
+                    """}
+            }
+        }
+                stage('Archive artifacts') {
+          steps {
+            archiveArtifacts artifacts: 'artifacts/*.nupkg', fingerprint: false, onlyIfSuccessful: false
+          }
+        }
+
+    }
+}
